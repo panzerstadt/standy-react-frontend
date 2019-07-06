@@ -7,15 +7,16 @@ const UserInfo = ({ onSuccess }) => {
   const [time, setTime] = useState({ time: null });
   const [submitted, setSubmitted] = useState(false);
   useEffect(() => {
-    const initTime = loadFromLocalStorage().time;
+    const init = loadFromLocalStorage();
+    const initTime = init.time;
     initTime && setTime({ time: initTime });
 
     return () => setSubmitted(false);
   }, []);
   useEffect(() => {
-    console.log(time);
     if (time.time && submitted) {
-      saveToLocalStorage(time);
+      const local = loadFromLocalStorage();
+      saveToLocalStorage({ ...local, ...time });
       onSuccess && onSuccess(time);
     }
   }, [time, submitted]);

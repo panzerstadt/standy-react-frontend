@@ -28,15 +28,24 @@ const Tracker = ({
   const [localRecord, setLocalRecord] = useState([]);
   const date = dayjs().format("YYYY-MM-DD");
 
-  console.log(departureTime);
-
   const sec = 10;
   const milli = sec * 1000;
 
   const [location, setLocation] = useState({ lat: 0, lng: 0 });
   useEffect(() => {
+    let id;
+    const options = {
+      enableHighAccuracy: false,
+      timeout: 10000
+    };
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(updateLocation);
+      navigator.geolocation.watchPosition(
+        updateLocation,
+        e => console.log("location erorr: ", e),
+        options
+      );
+    } else {
+      alert("sorry, this browser does not support geolocation!");
     }
   }, []);
 
@@ -77,9 +86,9 @@ const Tracker = ({
   const handleLocalRecord = e => {
     const time = dayjs().format("HH:mm:ss");
 
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(updateLocation);
-    }
+    // if (navigator.geolocation) {
+    //   navigator.geolocation.getCurrentPosition(updateLocation);
+    // }
 
     let currentRecord = localRecord.slice();
     const newRecord = [

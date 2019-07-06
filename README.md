@@ -1,3 +1,10 @@
+## steps
+
+0. requires: node.js (`brew install node`) and yarn (`npm install -g yarn`)
+1. `yarn install`
+1. `yarn start`
+1. deploy with `yarn deploy`
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts

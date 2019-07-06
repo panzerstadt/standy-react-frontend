@@ -13,7 +13,8 @@ const UserInfo = ({ onSuccess }) => {
   }, []);
   useEffect(() => {
     if (user.email) {
-      saveToLocalStorage(user);
+      const init = loadFromLocalStorage();
+      saveToLocalStorage({ ...init, ...user });
 
       onSuccess && onSuccess(user);
     }
