@@ -10,20 +10,12 @@ import dayjs from "dayjs";
 import "dayjs/locale/ja";
 dayjs.locale("ja");
 
-function getLocation() {
-  if (navigator.geolocation) {
-    return navigator.geolocation.getCurrentPosition();
-  } else {
-    console.log("Geolocation is not supported by this browser.");
-    return false;
-  }
-}
-
 const Tracker = ({
-  continuousTracking = false,
+  continuousTracking,
   user,
   trainLine,
-  departureTime
+  departureTime,
+  onSuccess
 }) => {
   const [localRecord, setLocalRecord] = useState([]);
   const date = dayjs().format("YYYY-MM-DD");
@@ -31,6 +23,7 @@ const Tracker = ({
   const sec = 10;
   const milli = sec * 1000;
 
+  const [locEnabled, setLocEnabled] = useState(false);
   const [location, setLocation] = useState({ lat: 0, lng: 0 });
   useEffect(() => {
     let id;
@@ -38,14 +31,16 @@ const Tracker = ({
       enableHighAccuracy: false,
       timeout: 10000
     };
+    const locError = e => {
+      alert("sorry, you need geolocation enabled for this to work!", e);
+      setLocEnabled(false);
+    };
+
     if (navigator.geolocation) {
-      navigator.geolocation.watchPosition(
-        updateLocation,
-        e => console.log("location erorr: ", e),
-        options
-      );
+      navigator.geolocation.watchPosition(updateLocation, locError, options);
+      setLocEnabled(true);
     } else {
-      alert("sorry, this browser does not support geolocation!");
+      locError();
     }
   }, []);
 
@@ -58,15 +53,12 @@ const Tracker = ({
   const [isTracking, setIsTracking] = useState(false);
   useEffect(() => {
     if (isTracking) {
-      if (continuousTracking) {
+      if (isContinuous) {
         console.log("tracking continuously!");
-        setIsContinuous(true);
       } else {
         console.log("tracking in batches!");
         handleLocalRecord();
       }
-    } else {
-      isContinuous && setIsContinuous(false);
     }
   }, [isTracking, continuousTracking]);
 
@@ -85,10 +77,6 @@ const Tracker = ({
 
   const handleLocalRecord = e => {
     const time = dayjs().format("HH:mm:ss");
-
-    // if (navigator.geolocation) {
-    //   navigator.geolocation.getCurrentPosition(updateLocation);
-    // }
 
     let currentRecord = localRecord.slice();
     const newRecord = [
@@ -114,10 +102,31 @@ const Tracker = ({
   const handleEnd = e => {
     console.log("tracking end");
     setIsTracking(false);
+    onSuccess && onSuccess();
   };
-  return (
+
+  const handleTrackContinuous = () => {
+    setIsContinuous(p => {
+      continuousTracking && continuousTracking(!p);
+      return !p;
+    });
+  };
+
+  return locEnabled ? (
     <div>
       <h3>start tracking your journey today!</h3>
+      <button
+        style={{
+          padding: "5px 10px",
+          backgroundColor: isContinuous ? "red" : "white",
+          border: "1px solid black",
+          borderRadius: 15
+        }}
+        onClick={handleTrackContinuous}
+      >
+        track continuously?
+      </button>
+      <br />
       <button className={styles.button} onClick={handleStart}>
         start tracking
       </button>
@@ -127,6 +136,10 @@ const Tracker = ({
       </button>
       <br />
       {`${isTracking}`}
+    </div>
+  ) : (
+    <div>
+      <h3>please use a geolocation enabled browser.</h3>
     </div>
   );
 };

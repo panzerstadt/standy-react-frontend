@@ -9,7 +9,8 @@ dayjs.locale("ja");
 export default firebase;
 
 export const pushRecordToDatabase = props => {
-  const collection = (props && props.collection) || "userDatabase";
+  const daystamp = dayjs().format("YYYY-MM-DD");
+  const collection = (props && props.collection) || "userTimeBin";
   const user = (props && props.user) || "test-user@gmail.com";
   const data = (props && props.data) || {
     date: "value",
@@ -17,22 +18,176 @@ export const pushRecordToDatabase = props => {
     time: "now"
   };
 
-  firebase
-    .firestore()
-    .collection(collection)
-    .doc(user)
-    .collection("records")
-    .add(data)
-    .then(v => {
-      console.log("data pushed!", v);
-    })
-    .catch(e => {
-      console.log("error: ", e);
-    });
+  if (props && props.data) {
+    // firebase hack to make the document
+    // "show up" on querysnapshots
+    firebase
+      .firestore()
+      .collection(collection)
+      .doc(user)
+      .set({});
+
+    firebase
+      .firestore()
+      .collection(collection)
+      .doc(user)
+      .collection(daystamp)
+      .add(data)
+      .then(v => {
+        console.log("data pushed!", v);
+      })
+      .catch(e => {
+        console.log("error: ", e);
+      });
+  }
+};
+
+export const FireStoreDEBUG = ({
+  collection = "userTimeBin",
+  doc = "userRecords",
+  user,
+  onUpdate
+}) => {
+  const [dbState, setDBState] = useState({});
+
+  useEffect(() => {
+    if (!user) return;
+
+    // get list to loop
+    // TODO: optional - trigger on db update
+    const getAllUsers = async () => {
+      let users = await firebase
+        .firestore()
+        .collection("userTimeBin")
+        .get()
+        .then(snapshot => {
+          return snapshot.docs.map(doc => doc.id);
+        })
+        .catch(e => {
+          setDBState({ error: e.toString() });
+          return [];
+        });
+
+      users = Array.from(users);
+
+      users && setDBState(users);
+      return users;
+    };
+
+    // get data
+    const getDataByDate = async (user, date = "2019-07-13") => {
+      console.log("showing user: ", user);
+
+      // actually the point is to loop over all users to
+      // process their raw data
+      const currentUser = await getAllUsers().then(
+        users => users.filter(v => v === user)[0]
+      );
+      if (!currentUser) return [];
+
+      return await firebase
+        .firestore()
+        .collection(collection)
+        .doc(currentUser)
+        .collection(date)
+        .get()
+        .then(querySnapshot => {
+          return querySnapshot.docs.map(doc => {
+            return doc.data();
+          });
+        });
+    };
+
+    // process data
+    const convertRawDataToMatrix = async () => {
+      const bounds = {
+        topLeft: {
+          lat: 35.730415,
+          lng: 139.680338
+        },
+        bottomRight: {
+          lat: 36.632705,
+          lng: 139.680338
+        }
+      };
+
+      const data = await getDataByDate(user);
+      console.log(data);
+
+      const mapLatLngToBounds = (lat, lng, x = 50, y = 50, bounds = bounds) => {
+        // remaps lat lng from raw data to 0-50
+        // if outside bounds, fill with 0
+      };
+
+      const buildOriginalDepartureMaps = () => {
+        // the one that the user promises to reduce
+        // [[0,0,0,0,-1,-1,-1,0,0,0], [0,-1,-1,0,0,0]]
+        return [[], []];
+      };
+
+      const buildOffPeakDepartureMaps = () => {
+        // the one that is currently tracking
+        // [[0,0,0,0,1,1,1,0,0,0], [0,1,1,0,0,0]]
+        return [[], []];
+      };
+
+      return {
+        original: buildOriginalDepartureMaps(),
+        offPeak: buildOffPeakDepartureMaps()
+      };
+    };
+
+    convertRawDataToMatrix();
+
+    // push back to firebase
+    const pushMatrixToUser = () => {};
+
+    // firebase
+    //   .firestore()
+    //   .collection(collection)
+    //   .doc("koichi@gmail.com")
+    //   .collection("2017-07-16")
+    //   .get()
+    //   .then(querySnapshot => {
+    //     if (!querySnapshot.empty) {
+    //       console.log("no documents found!");
+    //     }
+    //     let res = [];
+    //     querySnapshot.forEach(doc => {
+    //       console.log(doc);
+    //       doc
+    //         .collection()
+    //         .get()
+    //         .then(qSnapshot => {
+    //           qSnapshot.forEach(doc => {
+    //             console.log(doc);
+    //           });
+    //         });
+    //       console.log(doc);
+    //       console.log(doc.data());
+    //       res.push({ id: doc.id, data: doc.data() });
+    //     });
+
+    //     setDBState(res);
+    //   })
+    //   .catch(e => {
+    //     setDBState({ error: e });
+    //   });
+
+    return () => setDBState({});
+  }, [user]);
+
+  useEffect(() => {
+    if (onUpdate) onUpdate(dbState);
+  }, [dbState]);
+
+  return (
+    <p style={{ fontSize: 10 }}>db state: {JSON.stringify(dbState, null, 2)}</p>
+  );
 };
 
 export const FireStoreState = ({
-  collection = "userDatabase",
+  collection = "userTimeBin",
   doc = "userRecords",
   user = "@gmail.com",
   onUpdate
@@ -43,10 +198,12 @@ export const FireStoreState = ({
     firebase
       .firestore()
       .collection(collection)
-      .doc(user)
-      .collection("records")
       .get()
       .then(querySnapshot => {
+        if (!querySnapshot.exists) {
+          console.log("no documents founds!");
+        }
+        console.log(querySnapshot);
         let res = [];
         querySnapshot.forEach(doc => {
           res.push({ id: doc.id, data: doc.data() });

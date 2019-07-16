@@ -33,12 +33,17 @@ const UserInfo = ({ onSuccess }) => {
 
   return (
     <div>
-      <p>what is your usual departure time?</p>
-
-      <form onSubmit={handleSubmit}>
-        <input type="time" onChange={handleUpdateTime} />
-        <input type="submit" value="Submit" />
-      </form>
+      {submitted ? (
+        <p>your departure time: {time && time.time}</p>
+      ) : (
+        <>
+          <p>what is your usual departure time?</p>
+          <form onSubmit={handleSubmit}>
+            <input type="time" onChange={handleUpdateTime} />
+            <input type="submit" value="Submit" />
+          </form>
+        </>
+      )}
     </div>
   );
 };
