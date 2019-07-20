@@ -3,8 +3,10 @@ import firebase from "./lib/firebase";
 
 // timestamps
 import dayjs from "dayjs";
+import minMax from "dayjs/plugin/minMax";
 import "dayjs/locale/ja";
 dayjs.locale("ja");
+dayjs.extend(minMax);
 
 export default firebase;
 
@@ -98,32 +100,142 @@ export const FireStoreDEBUG = ({
         });
     };
 
+    const getSingleUserDataByDate = async (user, date = "2019-07-13") => {
+      let res = await firebase
+        .firestore()
+        .collection("userTimeBin")
+        .doc(user)
+        .collection(date)
+        .get()
+        .then(querySnapshot => {
+          if (querySnapshot.docs.length === 0) {
+            console.error("no querysnapshots found!");
+            return [];
+          }
+
+          return querySnapshot.docs.map(doc => {
+            return doc.data();
+          });
+        })
+        .catch(e => console.error(e));
+      return res;
+    };
+
     // process data
-    const convertRawDataToMatrix = async () => {
-      const bounds = {
+    const convertRawDataToMatrix = data => {
+      const matrixSize = {
+        x: 50,
+        y: 50
+      };
+      const boundsReal = {
         topLeft: {
           lat: 35.730415,
           lng: 139.680338
         },
         bottomRight: {
           lat: 36.632705,
-          lng: 139.680338
+          lng: 139.810916
         }
       };
 
-      const data = await getDataByDate(user);
-      console.log(data);
-
-      const mapLatLngToBounds = (lat, lng, x = 50, y = 50, bounds = bounds) => {
-        // remaps lat lng from raw data to 0-50
-        // if outside bounds, fill with 0
+      const bounds = {
+        topLeft: {
+          lat: 35.53,
+          lng: 139.68
+        },
+        bottomRight: {
+          lat: 36.78,
+          lng: 139.81
+        }
       };
 
-      const buildOriginalDepartureMaps = () => {
+      const locs = data.map(v => v.location);
+
+      // returns -1,-1 if either lat or lng is outside of bounds
+      const mapLatLngToBounds = (lat, lng, x = 50, y = 50, bbox = bounds) => {
+        const remap = (value, fromLow, fromHigh, toLow, toHigh) => {
+          return (
+            toLow +
+            ((toHigh - toLow) * (value - fromLow)) / (fromHigh - fromLow)
+          );
+        };
+        const remapCoord = (value, coordRange, outputRange) =>
+          remap(
+            value,
+            coordRange[0],
+            coordRange[1],
+            outputRange[0],
+            outputRange[1]
+          );
+
+        let result = { lat: undefined, lng: undefined };
+
+        const rangeLat = [bbox.topLeft.lat, bbox.bottomRight.lat];
+        const rangeLng = [bbox.topLeft.lng, bbox.bottomRight.lng];
+
+        // if outside bounds, fill with -1
+        const within = (value, range) => value >= range[0] && value <= range[1];
+        if (!within(lat, rangeLat) || !within(lng, rangeLng))
+          return { lat: -1, lng: -1 };
+
+        // remaps lat lng from raw data to 0-49 (array of 50)
+        result.lat = remapCoord(lat, rangeLat, [0, x - 1]);
+        result.lng = remapCoord(lng, rangeLng, [0, y - 1]);
+
+        return result;
+      };
+
+      // map all coordinates to integers 0-50
+      const mapped = locs.map(c => {
+        const m = mapLatLngToBounds(c.lat, c.lng, matrixSize.x, matrixSize.y);
+        return { y: Math.round(m.lat), x: Math.round(m.lng) };
+      });
+
+      // not used, but fun
+      const bin = (data, numBins) => {
+        // https://www.answerminer.com/blog/binning-guide-ideal-histogram
+        const maxVal = Math.max(data);
+        const minVal = Math.min(data);
+        const binWidth = numBins;
+
+        return Math.ceil((maxVal - minVal) / binWidth);
+      };
+
+      // not a matrix, but a list of items to fill
+      const randomMapped = Array.from({ length: 100 }).map(_ => ({
+        x: Math.round(Math.random() * 49),
+        y: Math.round(Math.random() * 49)
+      }));
+
+      // https://stackoverflow.com/questions/2218999/remove-duplicates-from-an-array-of-objects-in-javascript
+      const cleanDuplicates = data =>
+        data.filter(
+          (d, i) => i === data.findIndex(v => v.x === d.x && v.y === d.y)
+        );
+
+      const createEmptyArray = (x = 50, y = 50, fill = 0) => {
+        return Array.from({ length: y }).map(_ =>
+          Array.from({ length: x }).fill(fill)
+        );
+      };
+
+      const cleaned = cleanDuplicates(mapped);
+      console.log("cleaned: ", cleaned);
+
+      // array[y][x]
+      // let empty = createEmptyArray();
+      // empty[0][0] = 100;
+
+      const buildOriginalDepartureMaps = userCoordsData => {
         // the one that the user promises to reduce
         // [[0,0,0,0,-1,-1,-1,0,0,0], [0,-1,-1,0,0,0]]
-        return [[], []];
+        let arr = createEmptyArray(matrixSize.x, matrixSize.y, 0);
+        userCoordsData.map(coord => (arr[coord.y][coord.x] = 1));
+
+        return arr;
       };
+
+      const newMap = buildOriginalDepartureMaps(cleaned);
 
       const buildOffPeakDepartureMaps = () => {
         // the one that is currently tracking
@@ -131,48 +243,68 @@ export const FireStoreDEBUG = ({
         return [[], []];
       };
 
+      return newMap;
+    };
+
+    const getUserData = async user => await getSingleUserDataByDate(user);
+
+    const getUserMatrix = data => convertRawDataToMatrix(data);
+
+    const getUserTime = data => {
+      const day = dayjs(data[0].date).format("YYYY-MM-DD");
+
+      const times_dayjs = data.map(d => dayjs(day + ":" + d.time));
+
+      const originals = data.map(d => d.departureTime);
+      const originalTime = Array.from(new Set(originals))[0]; // TODO: handle multiple departureTime check
+      const original_dayjs = dayjs(day + ":" + originalTime);
+
+      const offPeakStartTime = dayjs.min(times_dayjs);
+      const offPeakEndTime = dayjs.max(times_dayjs);
+
+      const originalStartTime = original_dayjs;
+      const period = offPeakEndTime - offPeakStartTime;
+      const originalEndTime = original_dayjs.add(period);
+
+      const out = dayjsTime => dayjsTime.format("HH:mm");
+
       return {
-        original: buildOriginalDepartureMaps(),
-        offPeak: buildOffPeakDepartureMaps()
+        offPeak: {
+          start: out(offPeakStartTime),
+          end: out(offPeakEndTime)
+        },
+        original: {
+          start: out(originalStartTime),
+          end: out(originalEndTime)
+        }
       };
     };
 
-    convertRawDataToMatrix();
+    const run = async () => {
+      const userData = await getUserData(user);
+
+      const userMatrix = getUserMatrix(userData);
+      const userTime = getUserTime(userData);
+
+      const output = {
+        date: "2019-07-13 - this is a dummy",
+        time: userTime,
+        matrix: userMatrix
+      };
+
+      await firebase
+        .firestore()
+        .collection(collection)
+        .doc(user)
+        .set({ data: JSON.stringify(output) });
+
+      console.log(output);
+    };
+
+    run();
 
     // push back to firebase
     const pushMatrixToUser = () => {};
-
-    // firebase
-    //   .firestore()
-    //   .collection(collection)
-    //   .doc("koichi@gmail.com")
-    //   .collection("2017-07-16")
-    //   .get()
-    //   .then(querySnapshot => {
-    //     if (!querySnapshot.empty) {
-    //       console.log("no documents found!");
-    //     }
-    //     let res = [];
-    //     querySnapshot.forEach(doc => {
-    //       console.log(doc);
-    //       doc
-    //         .collection()
-    //         .get()
-    //         .then(qSnapshot => {
-    //           qSnapshot.forEach(doc => {
-    //             console.log(doc);
-    //           });
-    //         });
-    //       console.log(doc);
-    //       console.log(doc.data());
-    //       res.push({ id: doc.id, data: doc.data() });
-    //     });
-
-    //     setDBState(res);
-    //   })
-    //   .catch(e => {
-    //     setDBState({ error: e });
-    //   });
 
     return () => setDBState({});
   }, [user]);
