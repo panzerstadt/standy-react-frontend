@@ -49,7 +49,7 @@ const Tracker = ({
     setLocation(coords);
   };
 
-  const [isContinuous, setIsContinuous] = useState(false);
+  const [isContinuous, setIsContinuous] = useState(true);
   const [isTracking, setIsTracking] = useState(false);
   useEffect(() => {
     if (isTracking) {
@@ -124,7 +124,7 @@ const Tracker = ({
         }}
         onClick={handleTrackContinuous}
       >
-        track continuously?
+        continuous tracking {isContinuous ? "on" : "off"}
       </button>
       <br />
       <button className={styles.button} onClick={handleStart}>
@@ -134,8 +134,6 @@ const Tracker = ({
       <button className={styles.button} onClick={handleEnd}>
         end tracking
       </button>
-      <br />
-      {`${isTracking}`}
     </div>
   ) : (
     <div>

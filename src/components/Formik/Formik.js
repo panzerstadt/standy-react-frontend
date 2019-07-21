@@ -5,6 +5,7 @@ import * as Yup from "yup";
 import Email from "./templates/Email";
 import Generic from "./templates/Generic";
 import Login from "./templates/Login";
+import Text from "./templates/Text";
 
 const Form = ({
   template = "generic",
@@ -57,6 +58,22 @@ const Form = ({
               password: Yup.mixed()
                 .strict()
                 .required("password required!")
+            })
+          }
+          onSubmit={onSubmit || handleSubmit}
+          {...props}
+        />
+      );
+
+    case "text":
+      return (
+        <Text
+          theme="default"
+          initialValues={initData || { text: "" }}
+          validationSchema={
+            validationSchema ||
+            Yup.object().shape({
+              text: Yup.string().min(5)
             })
           }
           onSubmit={onSubmit || handleSubmit}

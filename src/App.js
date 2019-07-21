@@ -5,6 +5,7 @@ import Login from "./components/Login";
 import Tracker from "./components/Tracker";
 import TrainLine from "./components/TrainLine";
 import DepartureTime from "./components/DepartureTime";
+import Message from "./components/EndMessage";
 import { FireStoreState, FireStoreDEBUG } from "./components/Database";
 
 const taskReducer = (state, action) => {
@@ -52,7 +53,8 @@ function App() {
 
   const handleLogin = e => {
     setUser(e);
-    dispatch({ type: "TRAINLINE", status: true });
+    //dispatch({ type: "TRAINLINE", status: true });
+    dispatch({ type: "DEPARTURE_TIME", status: true });
   };
 
   const handleSelectTrainLine = e => {
@@ -76,7 +78,7 @@ function App() {
         {/* 1 */}
         {sections.login && <Login onSuccess={handleLogin} />}
         {/* 2 */}
-        {sections.trainLine && <TrainLine onSelect={handleSelectTrainLine} />}
+        {/* {sections.trainLine && <TrainLine onSelect={handleSelectTrainLine} />} */}
         {/* 3 */}
         {sections.departureTime && (
           <DepartureTime onSuccess={handleDepartureTime} />
@@ -94,11 +96,12 @@ function App() {
         {sections.complete && (
           <>
             <h3>thank you very much for participating!</h3>
+            <Message />
             <h5>refresh the browser if you want to start again.</h5>
           </>
         )}
-        <FireStoreState user={user && user.email} />
-        <FireStoreDEBUG user={user && user.email} />
+        {/* <FireStoreState user={user && user.email} />
+        <FireStoreDEBUG user={user && user.email} /> */}
       </header>
     </div>
   );
