@@ -39,6 +39,9 @@ const App = () => {
         <Logout onLogout={handleLogout} />
       </div>
       <header className={styles.page}>
+        <Route path="/">
+          <h3>click on Record to start!</h3>
+        </Route>
         <Route path="/record">
           <Record user={user && user.email} />
         </Route>

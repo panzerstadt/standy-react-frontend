@@ -13,7 +13,7 @@ const View = ({ user }) => {
         className={styles.imgContainer}
         href={VR_DASHBOARD + "?email=" + user}
         target="_blank"
-        rel="noreferer noopener"
+        rel="noopener noreferrer"
       >
         <img
           className={styles.img}
@@ -27,7 +27,7 @@ const View = ({ user }) => {
         className={styles.imgContainer}
         href={AR_VIEW}
         target="_blank"
-        rel="noreferer noopener"
+        rel="noopener noreferrer"
       >
         <img className={styles.img} src={AR_IMG} alt="link to AR site" />
         <h3 className={styles.text}>AR view</h3>

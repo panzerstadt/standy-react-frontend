@@ -5,6 +5,8 @@
 1. `yarn start`
 1. deploy with `yarn deploy`
 
+- originally from: https://github.com/panzerstadt/standy-2019
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
