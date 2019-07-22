@@ -1,5 +1,6 @@
 import firebase from "firebase";
 import "firebase/performance";
+import "firebase/auth";
 
 const config = {
   apiKey: process.env.apiKey,

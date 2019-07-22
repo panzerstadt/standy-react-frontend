@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import firebase from "./lib/firebase";
+import firebase from "../../libs/firebase";
 
 // timestamps
 import dayjs from "dayjs";

@@ -43,16 +43,23 @@ const Message = ({ onSuccess }) => {
           template="text"
           successText="thank you!"
           title="Leave a Message"
-          text="we encourage you to leave a message below to share your goodwill
-          with everyone who will visit Tokyo!"
+          text="share your goodwill
+          with Tokyo visitors!"
           placeholder={MESSAGES[msgInd]}
           onSubmit={handleSubmit}
         />
       ) : (
-        <p>
-          Thank you very much! we will make sure that your goodwill will be
-          spread to all visitors of Tokyo!
-        </p>
+        <>
+          <p>
+            Thank you very much! we will make sure that your goodwill will be
+            spread to all visitors of Tokyo!
+          </p>
+          <p>
+            view your contribution with the <strong>View</strong> tab,{" "}
+            <strong>Share</strong> your contribution with friends, or refresh
+            the browser if you want to start again.
+          </p>
+        </>
       )}
     </div>
   );

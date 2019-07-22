@@ -1,0 +1,39 @@
+.container {
+  padding: 20px;
+}
+
+.imgContainer {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.img {
+  filter: brightness(0.5);
+  width: 300px;
+}
+
+.img:hover {
+  filter: brightness(1);
+}
+
+.text {
+  position: absolute;
+  top: 50px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  color: white;
+  z-index: 2;
+}
+
+@media (min-width: 600px) {
+  .img {
+    width: 500px;
+  }
+  .text {
+    top: 100px;
+  }
+}

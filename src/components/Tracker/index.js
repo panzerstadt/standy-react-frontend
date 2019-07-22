@@ -10,6 +10,15 @@ import dayjs from "dayjs";
 import "dayjs/locale/ja";
 dayjs.locale("ja");
 
+const Ticker = () => {
+  const [toggle, setToggle] = useState(false);
+  useInterval(() => {
+    setToggle(p => !p);
+  }, 1000);
+
+  return toggle ? "-" : "_";
+};
+
 const Tracker = ({
   continuousTracking,
   user,
@@ -114,7 +123,14 @@ const Tracker = ({
 
   return locEnabled ? (
     <div>
-      <h3>start tracking your journey today!</h3>
+      {isTracking ? (
+        <h3>
+          currently tracking your journey <Ticker />
+        </h3>
+      ) : (
+        <h3>start tracking your journey today!</h3>
+      )}
+
       <button
         style={{
           padding: "5px 10px",

@@ -1,110 +1,82 @@
 import React, { useState, useEffect, useReducer } from "react";
+import { Link, Route, useLocation } from "wouter";
+
 import "./App.css";
+import styles from "./App.module.css";
 
-import Login from "./components/Login";
-import Tracker from "./components/Tracker";
-import TrainLine from "./components/TrainLine";
-import DepartureTime from "./components/DepartureTime";
-import Message from "./components/EndMessage";
-import { FireStoreState, FireStoreDEBUG } from "./components/Database";
+import Record from "./pages/Record";
+import Share from "./pages/Share";
+import View from "./pages/View";
+import Login from "./pages/Login";
+import Logout from "./components/Logout";
 
-const taskReducer = (state, action) => {
-  const stat = action.hasOwnProperty("status");
-  switch (action.type) {
-    case "LOGIN":
-      return {
-        ...state,
-        login: stat ? action.status : true
-      };
-    case "TRAINLINE":
-      return { ...state, trainLine: action.status ? action.status : true };
-    case "TRACKER":
-      return { ...state, tracker: action.status ? action.status : true };
-    case "DEPARTURE_TIME":
-      return { ...state, departureTime: action.status ? action.status : true };
-    case "COMPLETE":
-      return { ...initState, complete: true };
-    default:
-      alert("no action taken to task reducer");
-      return state;
-  }
-};
-
-const initState = {
-  login: false,
-  trainLine: false,
-  tracker: false,
-  departureTime: false,
-  complete: false
-};
-
-function App() {
-  // handles what to show
-  const [sections, dispatch] = useReducer(taskReducer, initState);
-
-  const [trainLine, setTrainLine] = useState("");
-  const [departureTime, setDepartureTime] = useState("");
+const App = () => {
   const [user, setUser] = useState({});
-
-  useEffect(() => {
-    // initialize by showing login
-    dispatch({ type: "LOGIN", status: true });
-  }, []);
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [location, setLocation] = useLocation();
 
   const handleLogin = e => {
     setUser(e);
-    //dispatch({ type: "TRAINLINE", status: true });
-    dispatch({ type: "DEPARTURE_TIME", status: true });
+    setLoggedIn(true);
   };
 
-  const handleSelectTrainLine = e => {
-    setTrainLine(e);
-    dispatch({ type: "DEPARTURE_TIME", status: true });
+  const handleLogout = e => {
+    setUser({});
+    setLoggedIn(false);
   };
 
-  const handleDepartureTime = e => {
-    setDepartureTime(e && e.time);
-    dispatch({ type: "TRACKER" });
-  };
-
-  const handleTrackSuccess = e => {
-    console.log("complete!");
-    dispatch({ type: "COMPLETE", status: true });
-  };
+  if (!loggedIn)
+    return (
+      <div className={styles.app}>
+        <Login onSuccess={handleLogin} />
+      </div>
+    );
 
   return (
-    <div className="App">
-      <header className="App-header">
-        {/* 1 */}
-        {sections.login && <Login onSuccess={handleLogin} />}
-        {/* 2 */}
-        {/* {sections.trainLine && <TrainLine onSelect={handleSelectTrainLine} />} */}
-        {/* 3 */}
-        {sections.departureTime && (
-          <DepartureTime onSuccess={handleDepartureTime} />
-        )}
-        {/* 4 */}
-        {sections.tracker && (
-          <Tracker
-            user={user && user.email}
-            trainLine={trainLine}
-            departureTime={departureTime}
-            onSuccess={handleTrackSuccess}
-          />
-        )}
-        {/* 5 */}
-        {sections.complete && (
-          <>
-            <h3>thank you very much for participating!</h3>
-            <Message />
-            <h5>refresh the browser if you want to start again.</h5>
-          </>
-        )}
-        {/* <FireStoreState user={user && user.email} />
-        <FireStoreDEBUG user={user && user.email} /> */}
+    <div className={styles.app}>
+      <div className={styles.login}>
+        <h3>welcome {user.email} !</h3>
+        <Logout onLogout={handleLogout} />
+      </div>
+      <header className={styles.page}>
+        <Route path="/record">
+          <Record user={user && user.email} />
+        </Route>
+
+        <Route path="/view">
+          <View user={user && user.email} />
+        </Route>
+        <Route path="/share">
+          <Share user={user && user.email} />
+        </Route>
       </header>
+      <footer className={styles.tabContainer}>
+        <Link href="/record">
+          <button
+            className={`${styles.tab} ${location === "/record" &&
+              styles.active}`}
+          >
+            Record
+          </button>
+        </Link>
+        <Link href="/view">
+          <button
+            className={`${styles.tab} ${location === "/view" && styles.active}`}
+          >
+            View
+          </button>
+        </Link>
+        <Link href="/share">
+          <button
+            className={`${styles.tab} ${location === "/share" &&
+              styles.active}`}
+          >
+            Share
+          </button>
+        </Link>
+      </footer>
     </div>
   );
-}
+};
 
 export default App;

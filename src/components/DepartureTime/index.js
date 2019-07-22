@@ -34,7 +34,7 @@ const UserInfo = ({ onSuccess }) => {
   return (
     <div>
       {submitted ? (
-        <p>your departure time: {time && time.time}</p>
+        <p>your usual departure time: {time && time.time}</p>
       ) : (
         <>
           <p>what is your usual departure time?</p>

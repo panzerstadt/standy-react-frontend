@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import Form from "../Formik";
 import { saveToLocalStorage, loadFromLocalStorage } from "../atoms";
 
-const UserInfo = ({ onSuccess }) => {
+const UserInfo = ({ onSuccess, clearStorage }) => {
   const [user, setUser] = useState({ email: null });
   const [loaded, setLoaded] = useState(false);
   useEffect(() => {
