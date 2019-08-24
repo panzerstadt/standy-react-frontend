@@ -28,6 +28,7 @@ const UserInfo = ({ onSuccess, onError, onClearStorage }) => {
 
       // authenticate
       setCheckReturningUser(user.email);
+      setReady(false);
     }
   }, [user]);
 

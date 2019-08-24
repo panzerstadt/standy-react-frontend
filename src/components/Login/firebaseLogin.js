@@ -11,10 +11,13 @@ export const useCheck = email => {
   const [exists, setExists] = useState(false);
   useEffect(() => {
     current &&
-      auth.fetchSignInMethodsForEmail(current).then(user => {
-        console.log("does this user exist? ", user);
-        user.length > 0 && setExists(true);
-      });
+      auth
+        .fetchSignInMethodsForEmail(current)
+        .then(user => {
+          console.log("does this user exist? ", user.length > 0);
+          user.length > 0 && setExists(true);
+        })
+        .catch(e => console.log("user check error: ", e));
   }, [current, users]);
 
   useEffect(() => {
@@ -35,13 +38,12 @@ export const useSignIn = ({ email, password }) => {
         const p = check.password || password;
         auth
           .signInWithEmailAndPassword(e, p)
-          .then(usr => console.log("authenticated", usr))
+          .then(usr => console.log("authenticated", usr.displayName))
           .catch(e =>
             setAuthenticated({ authenticated: false, error: e.message })
           );
       } catch (e) {
         console.log(e);
-        setDebug(e);
       }
     }
   }, [email, password, check]);
@@ -79,8 +81,6 @@ export const useSignUp = ({ email, password, nickname }) => {
         const e = check.email || email;
         const p = check.password || password;
         const n = check.nickname || nickname;
-
-        console.log(p, e, n);
 
         auth.createUserWithEmailAndPassword(e, p).then(user => {
           const newUser = auth.currentUser;
