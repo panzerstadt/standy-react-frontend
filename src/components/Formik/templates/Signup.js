@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { Formik } from "formik";
 
-//import styles from "./Email.module.css";
-
 import error from "../assets/error.svg";
 import success from "../assets/success.svg";
 const BUTTON_HEIGHT = 30;
@@ -81,6 +79,19 @@ const LoginForm = props => {
         const inputDiv = (
           <div className={styles.inputContainer}>
             <div className={styles.inputBar}>
+              <input
+                id="nickname"
+                placeholder="Nickname"
+                type="text"
+                value={values.nickname}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className={
+                  errors.nickname && touched.nickname
+                    ? styles.textInput + " " + styles.error
+                    : styles.textInput
+                }
+              />
               <input
                 id="email"
                 placeholder="Email Address"

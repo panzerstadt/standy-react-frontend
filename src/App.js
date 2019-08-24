@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useReducer } from "react";
 import { Link, Route, useLocation } from "wouter";
+import { motion } from "framer-motion";
 
 import "./App.css";
 import styles from "./App.module.css";
@@ -9,10 +10,13 @@ import Share from "./pages/Share";
 import View from "./pages/View";
 import Login from "./pages/Login";
 import Logout from "./components/Logout";
+import Unverified from "./components/Unverified";
+import { clearLocalStorage } from "./components/atoms";
 
 const App = () => {
   const [user, setUser] = useState({});
   const [loggedIn, setLoggedIn] = useState(false);
+  const [verified, setVerified] = useState(false);
   const [location, setLocation] = useLocation();
 
   const handleLogin = e => {
@@ -25,17 +29,29 @@ const App = () => {
     setLoggedIn(false);
   };
 
+  const handleClearStorage = e => {
+    clearLocalStorage();
+  };
+
   if (!loggedIn)
     return (
       <div className={styles.app}>
-        <Login onSuccess={handleLogin} />
+        <Login onSuccess={handleLogin} onClearStorage={handleClearStorage} />
       </div>
     );
 
+  if (!verified) {
+    return <Unverified />;
+  }
+
   return (
-    <div className={styles.app}>
+    <motion.div
+      className={styles.app}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1, transition: { delay: 0.3 } }}
+    >
       <div className={styles.login}>
-        <h3>welcome {user.email} !</h3>
+        <h3>welcome {(user && user.username) || user.email} !</h3>
         <Logout onLogout={handleLogout} />
       </div>
       <header className={styles.page}>
@@ -78,7 +94,7 @@ const App = () => {
           </button>
         </Link>
       </footer>
-    </div>
+    </motion.div>
   );
 };
 
