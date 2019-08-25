@@ -40,7 +40,11 @@ const UserInfo = ({ onSuccess }) => {
           <p>what is your usual departure time?</p>
           <form onSubmit={handleSubmit}>
             <input type="time" onChange={handleUpdateTime} />
-            <input type="submit" value="Submit" />
+            <input
+              type="submit"
+              value="Submit"
+              style={{ backgroundColor: "white" }}
+            />
           </form>
         </>
       )}

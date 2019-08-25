@@ -8,16 +8,23 @@ export const useCheck = email => {
   const [error, setError] = useState("");
 
   const [current, setCurrent] = useState(email);
-  const [exists, setExists] = useState(false);
+  const [exists, setExists] = useState(null);
   useEffect(() => {
     current &&
       auth
         .fetchSignInMethodsForEmail(current)
         .then(user => {
           console.log("does this user exist? ", user.length > 0);
-          user.length > 0 && setExists(true);
+          if (user.length > 0) {
+            setExists(true);
+          } else {
+            setExists(false);
+          }
         })
         .catch(e => console.log("user check error: ", e));
+    return () => {
+      setExists(null);
+    };
   }, [current, users]);
 
   useEffect(() => {
@@ -71,6 +78,13 @@ export const useSignUp = ({ email, password, nickname }) => {
     nickname: nickname
   });
 
+  const emailCallback = {
+    // URL you want to redirect back to. The domain (www.example.com) for this
+    // URL must be whitelisted in the Firebase Console.
+    url: "https://standy.firebaseapp.com/",
+    handleCodeInApp: true
+  };
+
   const [authenticated, setAuthenticated] = useState(false);
   useEffect(() => {
     if (
@@ -84,9 +98,16 @@ export const useSignUp = ({ email, password, nickname }) => {
 
         auth.createUserWithEmailAndPassword(e, p).then(user => {
           const newUser = auth.currentUser;
-          return newUser.updateProfile({
+          newUser.updateProfile({
             displayName: n || e
           });
+
+          return newUser
+            .sendEmailVerification()
+            .then(() => {
+              console.log("Please check your email for access");
+            })
+            .catch(e => console.log("email verification error!"));
         });
       } catch (e) {
         console.error(e);

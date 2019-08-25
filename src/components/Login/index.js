@@ -38,12 +38,14 @@ const UserInfo = ({ onSuccess, onError, onClearStorage }) => {
   useEffect(() => {
     if (isReturningUser) {
       // ask for password
+      console.log("sign in!");
       setReady(true);
     } else {
       // sign up
+      console.log("sign up!");
       setReady(true);
     }
-  }, [isReturningUser]);
+  }, [isReturningUser, user]);
 
   useEffect(() => {
     if (authReturningUser) {
